@@ -1,181 +1,194 @@
-# Seasons — Expert Git Flow Demo
+# Seasons — A Git Flow Showcase
 
-A Python CLI application that provides information about the four seasons.
-This repository demonstrates an **expert-level Git Flow** branching model.
+> **This repository exists to demonstrate what a real-world Git Flow history looks like.**
+> It contains merges, reverts, cherry-picks, hotfixes during releases, merge conflicts,
+> accidental commits, an emergency production fix, a leadership-driven tech stack migration,
+> and five tagged releases — all navigable through the git graph.
 
-## Git Flow Branching Model
+## See It Visually
 
-```
-main ─────●────────────────●──────────●────────────────●───
-           \              / \        / \              /
-            \   release/1.0.0  hotfix/1.0.1  release/2.0.0
-             \          /       \  /           \    /
-develop ──────●────●───●─────────●──────●───●───●──
-               \  /                      \  /
-          feature/*                 feature/*
-```
+**[View the Network Graph →](https://github.com/zuub-don/gitflow_leet_demo/network)**
 
-### Branch Types
+The GitHub network graph is the best way to explore this repo. You'll see the full branch
+topology: feature branches forking from `develop`, release branches bridging to `main`,
+hotfixes landing on both, and the messy real-world recovery paths in between.
 
-| Branch        | Purpose                                | Merges Into        |
-|---------------|----------------------------------------|--------------------|
-| `main`        | Production-ready releases (tagged)     | —                  |
-| `develop`     | Integration branch for next release    | —                  |
-| `feature/*`   | New features                           | `develop`          |
-| `release/*`   | Release stabilization & version bumps  | `main` + `develop` |
-| `hotfix/*`    | Urgent production fixes                | `main` + `develop` |
-
-### Merge Strategy
-
-- **feature → develop**: `--no-ff` (preserve feature history)
-- **release → main**: `--no-ff` (explicit merge commit)
-- **release → develop**: `--no-ff`
-- **hotfix → main**: `--no-ff`
-- **hotfix → develop**: `--no-ff`
-
-## Quick Start
+You can also explore it locally:
 
 ```bash
-pip install -e .
-seasons --help
-seasons info spring
-seasons all
+git log --oneline --graph --all --decorate
 ```
 
-## Running Tests
+---
 
-```bash
-pip install -e ".[dev]"
-pytest -v
+## What This Repo Demonstrates
+
+This is a **Seasons CLI** — a small Python application that serves as the vehicle
+for a rich, semi-realistic Git Flow history. The code is real and tested (59 passing tests),
+but the point is the *git history*, not the application.
+
+### The Timeline
+
+| Tag | What Happened |
+|-----|---------------|
+| `v1.0.0` | Initial release — Spring & Summer modules, CLI with `info` and `all` commands |
+| `v1.0.1` | **Hotfix** — registry lookups crashed on whitespace input |
+| `v2.0.0` | All four seasons, `summary` command, full test coverage |
+| `v2.0.2` | **Emergency hotfix** — registry accepted empty names, crashed the formatter. Landed *while a release was in progress* |
+| `v3.0.0` | Weather profiles, season comparison, change impact analyzer — shipped after surviving 5 chaos incidents |
+| `develop` | **Effect-TS migration** in progress — new leadership, new stack, coexisting alongside Python |
+
+---
+
+## Git Flow Model
+
+```
+main ─────●─────────────●──────●──────────────●──────────────●───
+           \           / \    / \            / \            /
+            release/1.0  h/1.0.1 \   h/2.0.2  release/3.0.0
+             \        /    \  /   \    \  /     /  /  /   /
+develop ──────●──●───●──────●──●───●────●──●───●──●──●───●── → (v4.0.0-dev: Effect-TS)
+               \ /              \ / \ /        \ / \ /
+           feature/*        feature/* feature/*  effects/*
 ```
 
-## Versioning
+### Branch Rules
 
-This project uses [Semantic Versioning](https://semver.org/).
-See `seasons/__version__.py` for the current version.
+| Branch | Purpose | Merges Into |
+|--------|---------|-------------|
+| `main` | Tagged production releases only | — |
+| `develop` | Integration branch; always ahead of `main` | — |
+| `feature/*` | One branch per feature or fix | `develop` (via `--no-ff`) |
+| `release/*` | Stabilization, RC iteration, version bumps | `main` + `develop` |
+| `hotfix/*` | Urgent production fixes from `main` | `main` + `develop` |
 
-## Release History
+Every merge uses `--no-ff` to preserve the branch topology in the graph.
 
-| Version | Date       | Highlights                                          |
-|---------|------------|-----------------------------------------------------|
-| 3.0.0   | 2026-02-13 | Weather, Compare, Impact Analyzer — survived chaos  |
-| 2.0.2   | 2026-02-13 | Emergency hotfix: registry input validation         |
-| 2.0.0   | 2026-02-13 | All four seasons, summary command                   |
-| 1.0.1   | 2026-02-13 | Whitespace-tolerant lookups                         |
-| 1.0.0   | 2026-02-13 | Spring & Summer, initial release                    |
+---
 
-## Real-World Chaos Scenarios
+## The Chaos Scenarios
 
-This repo's git history demonstrates how Git Flow handles real-world failures.
-Run `git log --oneline --graph --all --decorate` to see the full story.
+These aren't hypothetical. Each one is visible in the git history.
 
 ### 1. Buggy Feature → Revert → Proper Fix
 
-`feature/weather-api` was merged to `develop` without CI passing (reviewer on PTO).
-The module hit a non-existent API with `timeout=0`. Immediately **reverted** on develop.
-Then `feature/weather-api-v2` rewrote it with offline profiles and proper tests.
+`feature/weather-api` merged to `develop` with a broken external API call (`timeout=0`,
+non-existent endpoint). Reviewer was on PTO. CI would have caught it.
 
-**Git evidence:** Look for the `Revert "merge: feature/weather-api"` commit on develop.
+**Recovery:** `git revert -m 1` on the merge commit, then a new `feature/weather-api-v2`
+branch with offline weather profiles and proper tests.
+
+**Find it:** `git log --oneline develop | grep -i revert`
 
 ### 2. Conflicting Features on the Same File
 
-`feature/compare-command` added a new CLI subcommand while `feature/refactor-output`
-rewrote the output formatting — both modifying `seasons/cli.py`. Merged sequentially
-with conflict resolution required on the second merge.
+Two developers worked on `seasons/cli.py` simultaneously:
+
+- `feature/compare-command` — added a new subcommand
+- `feature/refactor-output` — rewrote the output formatting
+
+The second merge required manual conflict resolution.
+
+**Find it:** `git log --oneline --merges develop | grep -i conflict`
 
 ### 3. Release Candidate Iteration (RC1 → RC2)
 
-`release/3.0.0` started at `3.0.0-rc1`. QA found two bugs:
-- `seasons compare spring spring` produced nonsensical output (self-comparison)
-- Long activity strings broke the box-drawing layout
+`release/3.0.0` cut at `v3.0.0-rc1`. QA found two bugs:
 
-Both fixed directly on the release branch, then bumped to `3.0.0-rc2`.
+- Self-comparison (`seasons compare spring spring`) produced nonsensical output
+- Long activity strings overflowed the box-drawing layout
 
-### 4. Emergency Hotfix During Active Release
+Both fixed directly on the release branch. Bumped to `v3.0.0-rc2`.
 
-While `release/3.0.0` was in QA, production broke: the registry accepted
-seasons with empty names, crashing the CLI formatter.
+**Find it:** Look at the commits between `rc1` and `rc2` on the release branch in the network graph.
 
-- `hotfix/2.0.2` branched from `main`, fixed & tagged `v2.0.2`
-- The fix was **cherry-picked** into the active `release/3.0.0` branch
-- The hotfix was also **back-merged** into `develop` (with version conflict resolution)
+### 4. Emergency Hotfix During an Active Release
 
-**This is the hardest Git Flow scenario** — three branches receiving the same fix
-through different mechanisms (merge, cherry-pick, merge).
+**This is the hardest Git Flow scenario.** While `release/3.0.0` was in QA, production
+broke: the registry accepted seasons with empty names, crashing the CLI formatter.
 
-### 5. Accidental Commit to Main
+- `hotfix/2.0.2` branched from `main` → fixed → tagged `v2.0.2` → merged back to `main`
+- The same fix was **cherry-picked** into the in-flight `release/3.0.0`
+- The hotfix was **back-merged** into `develop` (with version conflict resolution)
 
-Someone pushed `seasons/experimental.py` directly to `main` — no branch, no PR,
-no review, and it contained a `42 / 0` division-by-zero bug.
-**Immediately reverted** in the next commit.
+Three branches received the same fix through three different git mechanisms: merge,
+cherry-pick, and merge with conflict resolution.
 
-**Git evidence:** Two consecutive commits on `main` — the accident and its revert.
+**Find it:** The `v2.0.2` tag on `main` and the cherry-pick commit on the release branch.
+
+### 5. Accidental Commit Directly to Main
+
+Someone pushed `seasons/experimental.py` (containing `42 / 0`) straight to `main`.
+No branch, no PR, no review. **Immediately reverted** in the very next commit.
+
+**Find it:** Two consecutive commits on `main` — the accident and its revert.
+
+---
+
+## The Tech Stack Migration (Effect-TS)
+
+New technical leadership decided to rewrite the application in TypeScript using the
+[Effect](https://effect.website/) ecosystem. Rather than a big-bang replacement, the
+migration lives **alongside** the Python code in `seasons-ts/`.
+
+This is documented in [ADR-001](docs/adr/001-migrate-to-effect-ts.md) and was introduced
+through five sequential feature branches — each merged to `develop` via `--no-ff`:
+
+| Feature Branch | What It Introduced |
+|----------------|-------------------|
+| `feature/effects-rfc` | Architecture Decision Record |
+| `feature/effects-scaffold` | `package.json`, `tsconfig.json`, vitest, tsup |
+| `feature/effects-schema` | `@effect/schema` domain models — branded types, typed errors, seed data |
+| `feature/effects-services` | Effect Services with Layer DI — Registry (Ref-backed), Weather |
+| `feature/effects-cli` | `@effect/cli` commands — `all`, `info`, `summary`, `compare`, `weather` |
+
+### Key Effect Patterns
+
+- **Schema-first** — `SeasonName`, `Month`, `Celsius` as branded types with runtime validation
+- **Services + Layers** — composable dependency injection replacing the global `_REGISTRY` dict
+- **Typed error channel** — `SeasonNotFoundError | SeasonAlreadyExistsError` in the Effect error type
+- **Layer graph** — `SeededRegistry → WeatherLive → AppLayer` composed at the entry point
+
+### Running It
+
+```bash
+cd seasons-ts && pnpm install
+pnpm test          # vitest
+pnpm dev -- all    # run via tsx
+```
+
+---
+
+## Running the Python Version
+
+```bash
+pip install -e ".[dev]"
+seasons --help
+seasons info spring
+seasons compare spring winter
+pytest -v           # 59 tests
+```
+
+---
 
 ## Change Impact Analyzer
 
-See [`tools/README.md`](tools/README.md) for the full documentation on the
-programmatic change impact scoring system, pre-commit hook, and GitHub Action.
+A programmatic scoring system for change risk. See [`tools/README.md`](tools/README.md)
+for CLI usage, pre-commit hook integration, and GitHub Action workflow.
 
-## Effect-TS Migration (v4.0.0-dev)
+---
 
-New technical leadership initiated a full rewrite in TypeScript using the
-[Effect](https://effect.website/) ecosystem. The migration is being done
-**alongside** the existing Python code (coexistence, not big-bang replacement).
+## Exploring the History
 
-See [`docs/adr/001-migrate-to-effect-ts.md`](docs/adr/001-migrate-to-effect-ts.md) for the
-Architecture Decision Record.
+| What to Look At | Command |
+|-----------------|---------|
+| Full graph | `git log --oneline --graph --all --decorate` |
+| Just the merges | `git log --oneline --merges --all` |
+| All tags | `git tag -l` |
+| Network graph | **[github.com/zuub-don/gitflow_leet_demo/network](https://github.com/zuub-don/gitflow_leet_demo/network)** |
+| Hotfix cherry-pick | `git log --oneline --all --grep="cherry-pick"` |
+| The revert | `git log --oneline --all --grep="Revert"` |
+| Release RC commits | `git log --oneline --all --grep="rc"` |
 
-### TypeScript Project: `seasons-ts/`
-
-```
-seasons-ts/
-├── src/
-│   ├── schema/Season.ts       # @effect/schema domain models + branded types
-│   ├── services/
-│   │   ├── Registry.ts        # SeasonRegistry Effect Service (Ref-backed, Layer DI)
-│   │   └── Weather.ts         # WeatherService (depends on Registry via Layers)
-│   ├── cli/
-│   │   ├── commands.ts        # all, info, summary, compare, weather commands
-│   │   └── index.ts           # Root command composition
-│   └── main.ts                # Entry point (Layer graph → NodeRuntime)
-├── test/
-│   ├── Schema.test.ts         # Schema decode/encode tests
-│   ├── Registry.test.ts       # Service tests with Layer-based DI
-│   └── scaffold.test.ts       # Smoke test
-├── package.json               # effect, @effect/schema, @effect/cli, @effect/platform
-├── tsconfig.json              # Strict TS with NodeNext resolution
-└── vitest.config.ts           # Test runner config
-```
-
-### Key Effect Patterns Demonstrated
-
-- **Schema-first design** — `@effect/schema` branded types (`SeasonName`, `Month`, `Celsius`) with automatic runtime validation
-- **Effect Services + Layers** — `SeasonRegistryTag` and `WeatherServiceTag` with composable dependency injection
-- **Typed error channel** — `SeasonNotFoundError`, `SeasonAlreadyExistsError`, `RegistryValidationError` in the Effect error type
-- **Structured concurrency** — `Effect.gen` generators with `yield*` for sequential composition
-- **Layer graph** — `SeededRegistry → WeatherLive → AppLayer` composed at the entry point
-- **@effect/cli** — Type-safe argument parsing with `Args`, `Options`, and `Command`
-
-### Running the TypeScript Version
-
-```bash
-cd seasons-ts
-pnpm install
-pnpm test          # Run vitest
-pnpm dev -- all    # Run CLI via tsx
-pnpm build         # Build with tsup
-```
-
-### Git Flow for the Migration
-
-Each migration phase was introduced as a separate `feature/*` branch:
-
-```
-feature/effects-rfc        → ADR-001 (architecture decision record)
-feature/effects-scaffold   → Project setup (package.json, tsconfig, vitest)
-feature/effects-schema     → Domain models with @effect/schema
-feature/effects-services   → Registry + Weather as Effect Services
-feature/effects-cli        → CLI commands with @effect/cli
-```
-
-All merged to `develop` via `--no-ff`, preserving full branch topology.
+This project uses [Semantic Versioning](https://semver.org/).
+Current version: see `seasons/__version__.py`.
