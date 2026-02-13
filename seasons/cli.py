@@ -45,7 +45,11 @@ def _format_season(info: registry.SeasonInfo, *, verbose: bool = True) -> str:
         act_str = ', '.join(info.activities[:3])
         if len(info.activities) > 3:
             act_str += f' (+{len(info.activities) - 3} more)'
-        lines.append(f"│  {'Activities':<12}: {act_str:<{width - 17}}│")
+        # Truncate to fit within box width (QA fix: long activity strings broke layout)
+        max_act_len = width - 17
+        if len(act_str) > max_act_len:
+            act_str = act_str[:max_act_len - 3] + "..."
+        lines.append(f"│  {'Activities':<12}: {act_str:<{max_act_len}}│")
     lines.append(bot)
     return "\n".join(lines)
 
@@ -81,6 +85,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "compare":
+        if args.first.strip().lower() == args.second.strip().lower():
+            print("Cannot compare a season with itself.", file=sys.stderr)
+            return 1
         a = registry.get(args.first)
         b = registry.get(args.second)
         if a is None:
