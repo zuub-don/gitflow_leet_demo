@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "seasons"
+dynamic = ["version"]
+description = "CLI tool for seasonal information — Git Flow demo"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4", "pytest-cov>=4.1"]
+
+[project.scripts]
+seasons = "seasons.cli:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "seasons.__version__.__version__"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
