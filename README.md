@@ -53,3 +53,11 @@ pytest -v
 
 This project uses [Semantic Versioning](https://semver.org/).
 See `seasons/__version__.py` for the current version.
+
+## Release History
+
+| Version | Date       | Highlights                        |
+|---------|------------|-----------------------------------|
+| 2.0.0   | 2026-02-13 | All four seasons, summary command |
+| 1.0.1   | 2026-02-13 | Whitespace-tolerant lookups       |
+| 1.0.0   | 2026-02-13 | Spring & Summer, initial release  |
