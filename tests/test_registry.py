@@ -24,7 +24,7 @@ def test_register_and_get():
 
 
 def test_duplicate_register_raises():
-    info = SeasonInfo(name="Dup", months=(), avg_temp_c=0.0, description="x")
+    info = SeasonInfo(name="Dup", months=("Jan",), avg_temp_c=0.0, description="x")
     register(info)
     with pytest.raises(ValueError, match="already registered"):
         register(info)
@@ -36,6 +36,6 @@ def test_get_missing_returns_none():
 
 def test_all_seasons_sorted():
     for name in ("Zeta", "Alpha", "Mid"):
-        register(SeasonInfo(name=name, months=(), avg_temp_c=0.0, description="x"))
+        register(SeasonInfo(name=name, months=("Jan",), avg_temp_c=0.0, description="x"))
     names = [s.name for s in all_seasons()]
     assert names == ["Alpha", "Mid", "Zeta"]

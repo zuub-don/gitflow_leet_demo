@@ -11,7 +11,7 @@ def teardown_function():
 
 
 def test_get_strips_whitespace():
-    info = SeasonInfo(name="Spring", months=(), avg_temp_c=0.0, description="x")
+    info = SeasonInfo(name="Spring", months=("Mar",), avg_temp_c=0.0, description="x")
     register(info)
     assert get("  spring  ") is info
     assert get("Spring ") is info
@@ -19,6 +19,6 @@ def test_get_strips_whitespace():
 
 
 def test_register_strips_whitespace():
-    info = SeasonInfo(name=" Padded ", months=(), avg_temp_c=0.0, description="x")
+    info = SeasonInfo(name=" Padded ", months=("Jan",), avg_temp_c=0.0, description="x")
     register(info)
     assert get("padded") is info
