@@ -81,6 +81,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "compare":
+        if args.first.strip().lower() == args.second.strip().lower():
+            print("Cannot compare a season with itself.", file=sys.stderr)
+            return 1
         a = registry.get(args.first)
         b = registry.get(args.second)
         if a is None:
