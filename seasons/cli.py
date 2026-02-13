@@ -18,6 +18,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("all", help="Show all available seasons")
     info_parser = sub.add_parser("info", help="Show details for a season")
     info_parser.add_argument("name", type=str, help="Season name")
+    sub.add_parser("summary", help="Show a compact summary table")
     return parser
 
 
@@ -48,6 +49,7 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         for s in seasons:
             print(_format_season(s))
+            print()
         return 0
 
     if args.command == "info":
@@ -58,7 +60,24 @@ def main(argv: list[str] | None = None) -> int:
         print(_format_season(info))
         return 0
 
+    if args.command == "summary":
+        _print_summary()
+        return 0
+
     return 0
+
+
+def _print_summary() -> None:
+    seasons = registry.all_seasons()
+    if not seasons:
+        print("No seasons registered.")
+        return
+    header = f"{'Season':<10} {'Months':<30} {'Avg °C':>6}"
+    print(header)
+    print("─" * len(header))
+    for s in seasons:
+        months_str = ", ".join(s.months)
+        print(f"{s.name:<10} {months_str:<30} {s.avg_temp_c:>6.1f}")
 
 
 if __name__ == "__main__":
