@@ -18,15 +18,15 @@ _REGISTRY: dict[str, SeasonInfo] = {}
 
 def register(info: SeasonInfo) -> None:
     """Register a season in the global registry."""
-    key = info.name.lower()
+    key = info.name.strip().lower()
     if key in _REGISTRY:
         raise ValueError(f"Season '{key}' is already registered.")
     _REGISTRY[key] = info
 
 
 def get(name: str) -> SeasonInfo | None:
-    """Retrieve season info by name (case-insensitive)."""
-    return _REGISTRY.get(name.lower())
+    """Retrieve season info by name (case-insensitive, whitespace-tolerant)."""
+    return _REGISTRY.get(name.strip().lower())
 
 
 def all_seasons() -> list[SeasonInfo]:
