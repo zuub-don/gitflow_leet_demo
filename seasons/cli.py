@@ -4,6 +4,7 @@ import sys
 
 from seasons.__version__ import __version__
 from seasons import registry
+from seasons import weather
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -19,6 +20,8 @@ def build_parser() -> argparse.ArgumentParser:
     info_parser = sub.add_parser("info", help="Show details for a season")
     info_parser.add_argument("name", type=str, help="Season name")
     sub.add_parser("summary", help="Show a compact summary table")
+    weather_parser = sub.add_parser("weather", help="Show weather profile for a season")
+    weather_parser.add_argument("name", type=str, help="Season name")
     return parser
 
 
@@ -63,6 +66,15 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "summary":
         _print_summary()
         return 0
+
+    if args.command == "weather":
+        try:
+            profile = weather.get_weather(args.name)
+            print(weather.format_weather(profile))
+            return 0
+        except weather.SeasonNotFoundError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 1
 
     return 0
 
