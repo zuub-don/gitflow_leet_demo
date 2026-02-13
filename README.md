@@ -115,3 +115,67 @@ no review, and it contained a `42 / 0` division-by-zero bug.
 
 See [`tools/README.md`](tools/README.md) for the full documentation on the
 programmatic change impact scoring system, pre-commit hook, and GitHub Action.
+
+## Effect-TS Migration (v4.0.0-dev)
+
+New technical leadership initiated a full rewrite in TypeScript using the
+[Effect](https://effect.website/) ecosystem. The migration is being done
+**alongside** the existing Python code (coexistence, not big-bang replacement).
+
+See [`docs/adr/001-migrate-to-effect-ts.md`](docs/adr/001-migrate-to-effect-ts.md) for the
+Architecture Decision Record.
+
+### TypeScript Project: `seasons-ts/`
+
+```
+seasons-ts/
+├── src/
+│   ├── schema/Season.ts       # @effect/schema domain models + branded types
+│   ├── services/
+│   │   ├── Registry.ts        # SeasonRegistry Effect Service (Ref-backed, Layer DI)
+│   │   └── Weather.ts         # WeatherService (depends on Registry via Layers)
+│   ├── cli/
+│   │   ├── commands.ts        # all, info, summary, compare, weather commands
+│   │   └── index.ts           # Root command composition
+│   └── main.ts                # Entry point (Layer graph → NodeRuntime)
+├── test/
+│   ├── Schema.test.ts         # Schema decode/encode tests
+│   ├── Registry.test.ts       # Service tests with Layer-based DI
+│   └── scaffold.test.ts       # Smoke test
+├── package.json               # effect, @effect/schema, @effect/cli, @effect/platform
+├── tsconfig.json              # Strict TS with NodeNext resolution
+└── vitest.config.ts           # Test runner config
+```
+
+### Key Effect Patterns Demonstrated
+
+- **Schema-first design** — `@effect/schema` branded types (`SeasonName`, `Month`, `Celsius`) with automatic runtime validation
+- **Effect Services + Layers** — `SeasonRegistryTag` and `WeatherServiceTag` with composable dependency injection
+- **Typed error channel** — `SeasonNotFoundError`, `SeasonAlreadyExistsError`, `RegistryValidationError` in the Effect error type
+- **Structured concurrency** — `Effect.gen` generators with `yield*` for sequential composition
+- **Layer graph** — `SeededRegistry → WeatherLive → AppLayer` composed at the entry point
+- **@effect/cli** — Type-safe argument parsing with `Args`, `Options`, and `Command`
+
+### Running the TypeScript Version
+
+```bash
+cd seasons-ts
+pnpm install
+pnpm test          # Run vitest
+pnpm dev -- all    # Run CLI via tsx
+pnpm build         # Build with tsup
+```
+
+### Git Flow for the Migration
+
+Each migration phase was introduced as a separate `feature/*` branch:
+
+```
+feature/effects-rfc        → ADR-001 (architecture decision record)
+feature/effects-scaffold   → Project setup (package.json, tsconfig, vitest)
+feature/effects-schema     → Domain models with @effect/schema
+feature/effects-services   → Registry + Weather as Effect Services
+feature/effects-cli        → CLI commands with @effect/cli
+```
+
+All merged to `develop` via `--no-ff`, preserving full branch topology.
