@@ -11,10 +11,11 @@ license = {text = "MIT"}
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=7.4", "pytest-cov>=4.1"]
+dev = ["pytest>=7.4", "pytest-cov>=4.1", "radon>=6.0", "pre-commit>=3.6"]
 
 [project.scripts]
 seasons = "seasons.cli:main"
+change-impact = "tools.change_impact:main"
 
 [tool.setuptools.dynamic]
 version = {attr = "seasons.__version__.__version__"}

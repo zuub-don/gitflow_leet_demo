@@ -1,5 +1,20 @@
 """Tests for the CLI module."""
+import pytest
+from seasons.registry import _REGISTRY
 from seasons.cli import main
+from seasons import spring, summer, autumn, winter
+
+
+@pytest.fixture(autouse=True)
+def _ensure_seasons_registered():
+    """Re-register all seasons before each test (other tests may clear the registry)."""
+    _REGISTRY.clear()
+    spring.init()
+    summer.init()
+    autumn.init()
+    winter.init()
+    yield
+    _REGISTRY.clear()
 
 
 def test_main_no_args(capsys):
