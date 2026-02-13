@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+#
+# pre-commit hook — Change Impact Analysis
+# =========================================
+# Runs the change impact analyzer on staged changes before each commit.
+# If the composite score exceeds the threshold, the commit is blocked.
+#
+# Install:
+#   ln -sf ../../tools/hooks/pre-commit .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+#
+# Configure threshold via environment variable (default: 75):
+#   export CHANGE_IMPACT_THRESHOLD=60
+#
+
+THRESHOLD="${CHANGE_IMPACT_THRESHOLD:-75}"
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+echo "── Change Impact Analysis (pre-commit) ──"
+
+# Run the analyzer on staged changes
+python3 -m tools.change_impact --staged --threshold "$THRESHOLD"
+EXIT_CODE=$?
+
+if [ "$EXIT_CODE" -ne 0 ]; then
+    echo ""
+    echo "╔═══════════════════════════════════════════════════════╗"
+    echo "║  ⛔ COMMIT BLOCKED — Impact score exceeds threshold  ║"
+    echo "║                                                      ║"
+    echo "║  Threshold : ${THRESHOLD}                                     ║"
+    echo "║                                                      ║"
+    echo "║  Options:                                            ║"
+    echo "║    1. Reduce change scope (split into smaller PRs)   ║"
+    echo "║    2. Add tests to improve test ratio score          ║"
+    echo "║    3. Override: git commit --no-verify               ║"
+    echo "║    4. Raise threshold: CHANGE_IMPACT_THRESHOLD=90    ║"
+    echo "╚═══════════════════════════════════════════════════════╝"
+    exit 1
+fi
+
+echo "✅ Impact check passed (threshold: ${THRESHOLD})"

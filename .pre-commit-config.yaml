@@ -1,0 +1,29 @@
+# Pre-commit configuration
+# ========================
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+#
+# This config uses the local change-impact analyzer as a hook.
+# It also includes standard Python quality hooks.
+
+repos:
+  # ── Standard hooks ──
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  # ── Local: Change Impact Analysis ──
+  - repo: local
+    hooks:
+      - id: change-impact
+        name: Change Impact Analysis
+        entry: python3 -m tools.change_impact --staged --threshold 75
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+        verbose: true

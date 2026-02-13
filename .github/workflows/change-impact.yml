@@ -1,0 +1,88 @@
+# GitHub Action — Change Impact Analysis
+# =======================================
+# Runs on every PR targeting main or develop.
+# Posts a Markdown comment with the impact report.
+# Fails the check if composite score exceeds the threshold.
+
+name: Change Impact Analysis
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  IMPACT_THRESHOLD: "75"
+
+jobs:
+  change-impact:
+    name: Analyze Change Impact
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history needed for churn analysis
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install radon
+
+      - name: Run impact analysis (JSON)
+        id: impact_json
+        run: |
+          python -m tools.change_impact \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --format json > impact_report.json
+          echo "score=$(python -c "import json; print(json.load(open('impact_report.json'))['composite_score'])")" >> "$GITHUB_OUTPUT"
+          echo "grade=$(python -c "import json; print(json.load(open('impact_report.json'))['grade'])")" >> "$GITHUB_OUTPUT"
+
+      - name: Run impact analysis (Markdown)
+        run: |
+          python -m tools.change_impact \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}" \
+            --format markdown > impact_report.md
+
+      - name: Post PR comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: change-impact
+          path: impact_report.md
+
+      - name: Upload JSON artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: change-impact-report
+          path: impact_report.json
+          retention-days: 30
+
+      - name: Enforce threshold
+        run: |
+          SCORE="${{ steps.impact_json.outputs.score }}"
+          GRADE="${{ steps.impact_json.outputs.grade }}"
+          echo "Impact Score: ${SCORE} (${GRADE})"
+          echo "Threshold: ${IMPACT_THRESHOLD}"
+
+          if (( $(echo "${SCORE} > ${IMPACT_THRESHOLD}" | bc -l) )); then
+            echo "::error::Change impact score ${SCORE} exceeds threshold ${IMPACT_THRESHOLD}."
+            echo ""
+            echo "Recommendations:"
+            echo "  - Split into smaller, focused PRs"
+            echo "  - Add tests to cover new logic"
+            echo "  - Reduce complexity in changed functions"
+            exit 1
+          fi
+
+          echo "✅ Impact check passed."
