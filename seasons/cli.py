@@ -22,6 +22,9 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("summary", help="Show a compact summary table")
     weather_parser = sub.add_parser("weather", help="Show weather profile for a season")
     weather_parser.add_argument("name", type=str, help="Season name")
+    cmp_parser = sub.add_parser("compare", help="Compare two seasons side by side")
+    cmp_parser.add_argument("first", type=str, help="First season")
+    cmp_parser.add_argument("second", type=str, help="Second season")
     return parser
 
 
@@ -67,6 +70,18 @@ def main(argv: list[str] | None = None) -> int:
         _print_summary()
         return 0
 
+    if args.command == "compare":
+        a = registry.get(args.first)
+        b = registry.get(args.second)
+        if a is None:
+            print(f"Unknown season: '{args.first}'", file=sys.stderr)
+            return 1
+        if b is None:
+            print(f"Unknown season: '{args.second}'", file=sys.stderr)
+            return 1
+        print(_format_comparison(a, b))
+        return 0
+
     if args.command == "weather":
         try:
             profile = weather.get_weather(args.name)
@@ -77,6 +92,24 @@ def main(argv: list[str] | None = None) -> int:
             return 1
 
     return 0
+
+
+def _format_comparison(a: registry.SeasonInfo, b: registry.SeasonInfo) -> str:
+    """Format a side-by-side comparison of two seasons."""
+    lines = [
+        f"{'':15} {'┃ ' + a.name:<20} {'┃ ' + b.name:<20}",
+        "─" * 55,
+        f"{'Months':15} ┃ {', '.join(a.months):<18} ┃ {', '.join(b.months):<18}",
+        f"{'Avg Temp':15} ┃ {a.avg_temp_c:<18.1f} ┃ {b.avg_temp_c:<18.1f}",
+    ]
+    diff = a.avg_temp_c - b.avg_temp_c
+    if diff > 0:
+        lines.append(f"  → {a.name} is {diff:.1f}°C warmer than {b.name}")
+    elif diff < 0:
+        lines.append(f"  → {b.name} is {abs(diff):.1f}°C warmer than {a.name}")
+    else:
+        lines.append(f"  → Both seasons have the same average temperature")
+    return "\n".join(lines)
 
 
 def _print_summary() -> None:
