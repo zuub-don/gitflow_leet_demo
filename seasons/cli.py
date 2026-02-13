@@ -28,15 +28,25 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _format_season(info: registry.SeasonInfo) -> str:
-    lines = [
-        f"━━━ {info.name} ━━━",
-        f"  Months     : {', '.join(info.months)}",
-        f"  Avg Temp   : {info.avg_temp_c}°C",
-        f"  Description: {info.description}",
-    ]
+def _format_season(info: registry.SeasonInfo, *, verbose: bool = True) -> str:
+    """Format season info with box-drawing characters."""
+    width = 56
+    name_display = f" {info.name} "
+    top = f"┌{'─' * width}┐"
+    bot = f"└{'─' * width}┘"
+    title = f"│{name_display:─^{width}}│"
+    lines = [top, title, f"│{'─' * width}│"]
+    lines.append(f"│  {'Months':<12}: {', '.join(info.months):<{width - 17}}│")
+    lines.append(f"│  {'Avg Temp':<12}: {info.avg_temp_c}°C{'':<{width - 22 - len(str(info.avg_temp_c))}}│")
+    if verbose and info.description:
+        desc = info.description[:width - 17]
+        lines.append(f"│  {'Description':<12}: {desc:<{width - 17}}│")
     if info.activities:
-        lines.append(f"  Activities : {', '.join(info.activities)}")
+        act_str = ', '.join(info.activities[:3])
+        if len(info.activities) > 3:
+            act_str += f' (+{len(info.activities) - 3} more)'
+        lines.append(f"│  {'Activities':<12}: {act_str:<{width - 17}}│")
+    lines.append(bot)
     return "\n".join(lines)
 
 
@@ -113,16 +123,18 @@ def _format_comparison(a: registry.SeasonInfo, b: registry.SeasonInfo) -> str:
 
 
 def _print_summary() -> None:
+    """Print a compact summary table with box-drawing borders."""
     seasons = registry.all_seasons()
     if not seasons:
         print("No seasons registered.")
         return
-    header = f"{'Season':<10} {'Months':<30} {'Avg °C':>6}"
-    print(header)
-    print("─" * len(header))
+    print("┌──────────┬────────────────────────────────┬────────┐")
+    print("│ Season   │ Months                         │ Avg °C │")
+    print("├──────────┼────────────────────────────────┼────────┤")
     for s in seasons:
         months_str = ", ".join(s.months)
-        print(f"{s.name:<10} {months_str:<30} {s.avg_temp_c:>6.1f}")
+        print(f"│ {s.name:<8} │ {months_str:<30} │ {s.avg_temp_c:>6.1f} │")
+    print("└──────────┴────────────────────────────────┴────────┘")
 
 
 if __name__ == "__main__":
